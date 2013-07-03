@@ -82,7 +82,7 @@ class WantsController < ApplicationController
   #         在求二手物品不存在或已被删除：返回http状态为404
   delete '/:id' do
     if @sale.user_id == @current_user.id
-      @want.delete
+      @want.destroy
       status 202
     else
       status 401

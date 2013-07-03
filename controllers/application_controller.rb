@@ -2,17 +2,29 @@ require 'sinatra/base'
 require 'sinatra/activerecord'
 require 'json'
 require 'bcrypt'
+require 'mini_magick'
+
 class ApplicationController < Sinatra::Base
   register Sinatra::ActiveRecordExtension
 
   helpers ApplicationHelper
 
   set :views, File.expand_path('../../views', __FILE__)
-  set :database, "mysql2://root:albert@localhost/qiuchu"
+  set :database, "mysql2://root:@localhost/qiuchu"
 
   configure :production, :development do
     enable :logging
     enable :sessions
+
+    # setting app log
+    Logger.class_eval { alias :write :'<<' }
+    logger = Logger.new("log/#{settings.environment}.log")
+    use Rack::CommonLogger, logger
+  end
+
+  before '/pictures/:id' do
+	@current_user ||= User.find_by_token(params[:key]) unless params[:key].nil?
+    error 401 unless @current_user
   end
 
   get '/signup' do
@@ -24,6 +36,7 @@ class ApplicationController < Sinatra::Base
     @user.password_salt = BCrypt::Engine.generate_salt
     @user.password_hash = BCrypt::Engine.hash_secret(params[:user][:password], @user.password_salt)
     @user.token = SecureRandom.hex
+
     if @user.save
       session[:user] = @user.token
       redirect '/'
