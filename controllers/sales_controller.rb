@@ -28,7 +28,8 @@ class SalesController < ApplicationController
     @sales = Sale.where(:user_id => @current_user.id)
     @sales.each do |sale|
       tmp = sale_to_hash(sale, 2)
-      tmp["picture_id"] = sale.pictures.first.id
+      picture = sale.pictures.first
+      tmp["picture_id"] = picture.id unless picture.nil?
       values << tmp
     end
     values.to_json
@@ -42,7 +43,8 @@ class SalesController < ApplicationController
   #         二手物品不存在或已被删除：返回http状态为404
   get '/:id' do
     value = sale_to_hash(@sale, 1)
-    value["picture_ids"] = @sale.pictures.collect(&:id)
+    pictures = @sale.pictures
+    value["picture_ids"] = pictures.collect(&:id) unless pictures.empty?
     value.to_json
   end
 
@@ -77,7 +79,8 @@ class SalesController < ApplicationController
     if @sale.save
       status 201
 	    value = sale_to_hash(@sale, 1)
-      value["picture_ids"] = @sale.pictures.collect(&:id)
+      pictures = @sale.pictures
+      value["picture_ids"] = pictures.collect(&:id) unless pictures.empty?
       value.to_json
     else
       status 500
@@ -102,7 +105,8 @@ class SalesController < ApplicationController
       if @sale.save
         status 202
         value = sale_to_hash(@sale, 1)
-        value["picture_ids"] = @sale.pictures.collect(&:id)
+        pictures = @sale.pictures
+        value["picture_ids"] = pictures.collect(&:id) unless pictures.empty?
         value.to_json
       else
         status 500
