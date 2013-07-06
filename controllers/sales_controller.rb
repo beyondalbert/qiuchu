@@ -1,5 +1,7 @@
 class SalesController < ApplicationController
 
+  helpers SalesHelper
+
   before do
     pass if %w[pictures].include? request.path_info.split('/')[2]
     content_type :json
@@ -25,8 +27,8 @@ class SalesController < ApplicationController
     values = []
     @sales = Sale.where(:user_id => @current_user.id)
     @sales.each do |sale|
-      tmp = JSON.parse(sale.to_json)
-      tmp['sale']['picture'] = JSON.parse(sale.pictures.first.to_json)
+      tmp = sale_to_hash(sale, 2)
+      tmp["picture_id"] = sale.pictures.first.id
       values << tmp
     end
     values.to_json
@@ -39,8 +41,8 @@ class SalesController < ApplicationController
   #         用户认证失败：返回http状态为401
   #         二手物品不存在或已被删除：返回http状态为404
   get '/:id' do
-    value = JSON.parse(@sale.to_json)
-    value['sale']['pictures'] = JSON.parse(@sale.pictures.to_json)
+    value = sale_to_hash(@sale, 1)
+    value["picture_ids"] = @sale.pictures.collect(&:id)
     value.to_json
   end
 
@@ -74,9 +76,8 @@ class SalesController < ApplicationController
     
     if @sale.save
       status 201
-
-	  value = JSON.parse(@sale.to_json)
-      value['sale']['pictures'] = JSON.parse(@sale.pictures.to_json)
+	    value = sale_to_hash(@sale, 1)
+      value["picture_ids"] = @sale.pictures.collect(&:id)
       value.to_json
     else
       status 500
@@ -100,7 +101,9 @@ class SalesController < ApplicationController
       @sale.update_attributes(params[:sale])
       if @sale.save
         status 202
-        @sale.to_json
+        value = sale_to_hash(@sale, 1)
+        value["picture_ids"] = @sale.pictures.collect(&:id)
+        value.to_json
       else
         status 500
       end

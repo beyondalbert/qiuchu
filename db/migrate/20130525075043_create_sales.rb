@@ -7,7 +7,7 @@ class CreateSales < ActiveRecord::Migration
       t.integer :user_id, :null => false
       t.integer :condition
       t.integer :phone
-      t.integer :buger
+      t.integer :buyer
       t.integer :status
       t.float :longitude
       t.float :latitude

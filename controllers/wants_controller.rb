@@ -1,5 +1,5 @@
 class WantsController < ApplicationController
-
+  helpers WantsHelper
   before do
     content_type :json
     @current_user ||= User.find_by_token(params[:key]) unless params[:key].nil?
@@ -20,7 +20,13 @@ class WantsController < ApplicationController
   # 返回值：用户认证通过：返回用户自己要求的二手物品json
   #         用户认证失败：返回http状态为401
   get '/' do 
-    Want.where(:user_id => @current_user.id).to_json
+    values = []
+    @wants = Want.where(:user_id => @current_user.id)
+    @wants.each do |want|
+      tmp = want_to_hash(want, 2)
+      values << tmp
+    end
+    values.to_json
   end
 
   # 功能：返回某在求的二手物品
@@ -30,7 +36,8 @@ class WantsController < ApplicationController
   #         用户认证失败：返回http状态为401
   #         在求物品不存在或已被删除：返回http状态为404
   get '/:id' do
-    @want.to_json
+    value = want_to_hash(@want, 1)
+    value.to_json
   end
 
   # 功能：新发布一个要求的二手物品
@@ -44,6 +51,8 @@ class WantsController < ApplicationController
     @want.user_id = @current_user.id
     if @want.save
       status 201
+      value = want_to_hash(@want, 1)
+      value.to_json
     else
       status 500
     end
@@ -66,6 +75,8 @@ class WantsController < ApplicationController
       @want.update_attributes(params[:want])
       if @want.save
         status 202
+        value = want_to_hash(@want, 1)
+        value.to_json
       else
         status 401
       end
