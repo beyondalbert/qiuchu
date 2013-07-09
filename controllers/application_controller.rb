@@ -9,22 +9,22 @@ class ApplicationController < Sinatra::Base
 
   helpers ApplicationHelper
 
+  set :static, true
+  set :root, File.dirname(__FILE__)
+  set :public_dir, 'public'
+
   set :views, File.expand_path('../../views', __FILE__)
   set :database, "mysql2://root:@localhost/qiuchu"
 
+  use Rack::Session::Cookie, :expire_after => 60*60*3
+
   configure :production, :development do
     enable :logging
-    enable :sessions
 
     # setting app log
     Logger.class_eval { alias :write :'<<' }
     logger = Logger.new("log/#{settings.environment}.log")
     use Rack::CommonLogger, logger
-  end
-
-  before '/pictures/:id' do
-	@current_user ||= User.find_by_token(params[:key]) unless params[:key].nil?
-    error 401 unless @current_user
   end
 
   get '/signup' do
@@ -43,10 +43,6 @@ class ApplicationController < Sinatra::Base
     else
       redirect "/signup?email=#{params[:user][:email]}"
     end
-  end
-
-  get '/login' do
-    erb :login
   end
 
   post '/login' do
