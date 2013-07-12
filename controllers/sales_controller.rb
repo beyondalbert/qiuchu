@@ -60,7 +60,7 @@ class SalesController < ApplicationController
     @sale.user_id = @current_user.id
 
     if params[:file] && (tmpfile = params[:file][:tempfile]) && (name = params[:file][:filename])
-      directory = "public/files"
+      directory = "public/files/sales"
 
       name_array = name.split('.')
       file_unique_name = name_array[0] + "_" + Time.now.to_i.to_s + rand(999999).to_s + "." + name_array[1]

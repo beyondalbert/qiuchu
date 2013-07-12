@@ -1,5 +1,7 @@
 class UsersController < ApplicationController
 
+  helpers UsersHelper
+
   before do
     content_type :json
   end
@@ -59,5 +61,22 @@ class UsersController < ApplicationController
     else
       status 401
     end
+  end
+
+  # 功能：返回特定id的用户信息
+  # 参数：params[:id] params[:key]
+  # 用法：http://localhost:3000/users/1?key=5408afee03ca8c52a780570a4322cae3
+  # 返回值： 获取用户信息成功：返回用户数据，http状态为200
+  # 说明：params[:key]为可选，只有当前用户的id == 被获取的用户的id时，才返回用户的所有信息，
+  #       其他则只返回用户的email、地址信息和照片
+  get '/:id' do
+    @user = User.find(params[:id])
+    current_user ||= User.find_by_token(params[:key]) unless params[:key].nil?
+    if current_user && current_user.id == @user.id
+      value = user_to_hash(@user, 1)
+    else
+      value = user_to_hash(@user, 2)
+    end
+    value.to_json
   end
 end

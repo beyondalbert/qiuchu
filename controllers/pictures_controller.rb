@@ -11,21 +11,24 @@ class PicturesController < ApplicationController
   # 用法：http://localhost:3000/pictures?key=5408afee03ca8c52a780570a4322cae3
   # 返回值：用户认证失败：返回401
   #        下载成功：    返回200
+  # 说明：资源包括要出的物品（Sale）、要求的物品（Want）和用户（User）
   post '/' do
 	  case params[:item_type]
 	  when "Sale"
 	    @item = Sale.find(params[:item_id])
+		directory = "public/files/sales"
 	    return status 401 if @item.user_id != @current_user.id
 	  when "Want"
 	    @item = Want.find(params[:item_id])
+		directory = "public/files/wants"
 	    return status 401 if @item.user_id != @current_user.id
 	  when "User"
 	    @item = User.find(params[:item_id])
+		directory = "public/files/users"
 	    return status 401 if @item.id != @current_user.id
-    end
+      end
 	
 	  if params[:file] && (tmpfile = params[:file][:tempfile]) && (name = params[:file][:filename])
-      directory = "public/files"
 
       name_array = name.split('.')
       file_unique_name = name_array[0] + "_" + Time.now.to_i.to_s + rand(999999).to_s + "." + name_array[1]
@@ -36,11 +39,14 @@ class PicturesController < ApplicationController
 
       @picture = Picture.new(:name => name, :path => path, :size => size)
 
-	  if params[:item_type] == "User"
-	    @item.picture = @picture
-	  else
+	    if params[:item_type] == "User"
+        if !@item.picture.nil?
+	        @item.picture.destroy
+        end
+        @item.picture = @picture
+	    else
         @item.pictures << @picture
-	  end
+	    end
     else
       @error = "No file selected"
     end
